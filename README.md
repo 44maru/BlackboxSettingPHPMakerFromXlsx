@@ -1,0 +1,2 @@
+# BlackboxSettingPHPMakerFromXlsx
+入力ExcelからBOTの入力PHPファイルを作成する。
