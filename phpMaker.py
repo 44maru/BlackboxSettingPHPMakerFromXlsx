@@ -51,6 +51,7 @@ INDEX_CARD_CVV = 15
 INDEX_DELAY = 16
 INDEX_START_TIME = 17
 INDEX_CACHE = 18
+INDEX_PROXY = 19
 
 ID_MESSAGE = "message"
 
@@ -60,7 +61,6 @@ UTF8 = "utf8"
 SJIS = "sjis"
 
 CONFIG_TXT = "./config.txt"
-PROXY_TXT = "./proxy.txt"
 CONFIG_DICT = {}
 CONFIG_KEY_DELAY = "DELAY"
 CONFIG_KEY_START_WEEK = "START_WEEK"
@@ -68,7 +68,6 @@ CONFIG_KEY_START_HHMM = "START_HHMM"
 CONFIG_KEY_SECRET = "SECRET_KEY"
 CONFIG_KEY_DISCORD_HOOK_URL = "webhookURL"
 CONFIG_KEY_DISCORD_MESSAGE = "discordmessage"
-PROXY_LIST = []
 
 OUT_FILE_CONTENTS_HEADER = """<?php
 // 
@@ -217,7 +216,6 @@ class JsonMakerScreen(Screen):
 
     def dump_out_file_core(self, file_path):
         index = 1
-        proxy_index = 0
 
         with open(OUT_FILE_NAME, "w", encoding=UTF8) as f:
 
@@ -278,10 +276,10 @@ class JsonMakerScreen(Screen):
 
                 if card_type == "代金引換":
                     card_type = "visa"
-                    card_number = "0000000000000000"
-                    card_limit_month = "01"
-                    card_limit_year = "2020"
-                    cvv = "111"
+                    card_number = ""
+                    card_limit_month = "12"
+                    card_limit_year = "2018"
+                    cvv = ""
                 else:
                     card_number = row[INDEX_CARD_NUMBER].value
                     card_limit_month = "%02d" % row[INDEX_CARD_LIMIT_MONTH].value
@@ -291,11 +289,7 @@ class JsonMakerScreen(Screen):
                 delay = self.get_val_if_empty_as_default(row, INDEX_DELAY, CONFIG_DICT[CONFIG_KEY_DELAY])
                 start_hhmm = self.get_val_if_empty_as_default(row, INDEX_START_TIME, CONFIG_DICT[CONFIG_KEY_START_HHMM])
                 cache = self.get_val_if_empty_as_default(row, INDEX_CACHE, "true")
-
-                if len(PROXY_LIST) <= proxy_index:
-                    proxy_index = 0
-
-                proxy = self.get_proxy_info(proxy_index)
+                proxy = row[INDEX_PROXY].value
 
                 f.write(OUT_FILE_CONTENTS_TEMPLATE.format(
                     CONFIG_DICT[CONFIG_KEY_SECRET],
@@ -309,7 +303,6 @@ class JsonMakerScreen(Screen):
                 ))
 
                 index += 1
-                proxy_index += 1
 
             f.write(OUT_FILE_CONTENTS_HOOTER)
 
@@ -346,13 +339,6 @@ class JsonMakerScreen(Screen):
                 return True
 
         return False
-
-    def get_proxy_info(self, proxy_index):
-        if len(PROXY_LIST) > 0:
-            proxy = PROXY_LIST[proxy_index]
-        else:
-            proxy = EMPTY
-        return proxy
 
     def disp_messg(self, msg):
         self.ids[ID_MESSAGE].text = msg
@@ -394,15 +380,6 @@ class PhpMakerApp(App):
 
 def setup_config():
     load_config()
-    load_proxy()
-
-
-def load_proxy():
-    if not os.path.exists(PROXY_TXT):
-        return
-
-    for line in open(PROXY_TXT, "r", encoding=UTF8):
-        PROXY_LIST.append(line.replace("\n", ""))
 
 
 def load_config():
