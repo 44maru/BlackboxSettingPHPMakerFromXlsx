@@ -34,24 +34,26 @@ SIZE_L = "L"
 SIZE_XL = "XL"
 INDEX_TWITTER = 0
 INDEX_ITEM_NO = 1
-INDEX_ITEM_SIZE = 2
-INDEX_LAST_NAME = 3
-INDEX_FIRST_NAME = 4
-INDEX_POST_CODE = 5
-INDEX_STATE = 6
-INDEX_CITY = 7
-INDEX_ADDRESS = 8
-INDEX_PHONE = 9
-INDEX_EMAIL = 10
-INDEX_PAY_TYPE = 11
-INDEX_CARD_NUMBER = 12
-INDEX_CARD_LIMIT_MONTH = 13
-INDEX_CARD_LIMIT_YEAR = 14
-INDEX_CARD_CVV = 15
-INDEX_DELAY = 16
-INDEX_START_TIME = 17
-INDEX_CACHE = 18
-INDEX_PROXY = 19
+INDEX_CATEGORY = 2
+INDEX_ITEM_SIZE = 3
+INDEX_LAST_NAME = 4
+INDEX_FIRST_NAME = 5
+INDEX_POST_CODE = 6
+INDEX_STATE = 7
+INDEX_CITY = 8
+INDEX_ADDRESS = 9
+INDEX_PHONE = 10
+INDEX_EMAIL = 11
+INDEX_PAY_TYPE = 12
+INDEX_CARD_NUMBER = 13
+INDEX_CARD_LIMIT_MONTH = 14
+INDEX_CARD_LIMIT_YEAR = 15
+INDEX_CARD_CVV = 16
+INDEX_DELAY = 17
+INDEX_START_TIME = 18
+INDEX_CACHE = 19
+INDEX_OTAKEBI = 20
+INDEX_PROXY = 21
 
 ID_MESSAGE = "message"
 
@@ -88,6 +90,7 @@ $settings = array();
 OUT_FILE_CONTENTS_TEMPLATE = """
 $setting = array();
 $setting["secret"]		= "{}";
+$setting["category"]	= "{}";
 $setting["codes1"]		= "{}";
 $setting["sizes1"]		= "{}";
 $setting["codes2"]		= "{}";
@@ -264,6 +267,7 @@ class JsonMakerScreen(Screen):
                     item_code_3 = EMPTY
                     item_size_3 = EMPTY
 
+                category = row[INDEX_CATEGORY].value
                 last_name = row[INDEX_LAST_NAME].value
                 first_name = row[INDEX_FIRST_NAME].value
                 email = row[INDEX_EMAIL].value
@@ -290,16 +294,17 @@ class JsonMakerScreen(Screen):
                 delay = self.get_val_if_empty_as_default(row, INDEX_DELAY, CONFIG_DICT[CONFIG_KEY_DELAY])
                 start_hhmm = self.get_val_if_empty_as_default(row, INDEX_START_TIME, CONFIG_DICT[CONFIG_KEY_START_HHMM])
                 cache = self.get_val_if_empty_as_default(row, INDEX_CACHE, "true")
+                discord_messg = self.get_val_if_empty_as_default(row, INDEX_OTAKEBI, CONFIG_DICT[CONFIG_KEY_DISCORD_MESSAGE])
                 proxy = row[INDEX_PROXY].value
 
                 f.write(OUT_FILE_CONTENTS_TEMPLATE.format(
-                    CONFIG_DICT[CONFIG_KEY_SECRET],
+                    CONFIG_DICT[CONFIG_KEY_SECRET], category,
                     item_code_1, item_size_1, item_code_2, item_size_2, item_code_3, item_size_3,
                     proxy, CONFIG_DICT[CONFIG_KEY_START_WEEK],
                     start_hhmm, last_name, first_name, email,
                     phone_number, state, city, detail_address, zip_code, card_type, card_number,
                     card_limit_month, card_limit_year, cvv, cache, delay,
-                    CONFIG_DICT[CONFIG_KEY_DISCORD_HOOK_URL], CONFIG_DICT[CONFIG_KEY_DISCORD_MESSAGE],
+                    CONFIG_DICT[CONFIG_KEY_DISCORD_HOOK_URL], discord_messg,
                     index
                 ))
 
@@ -326,6 +331,7 @@ class JsonMakerScreen(Screen):
     @staticmethod
     def is_not_address_record(row):
         if row[INDEX_TWITTER].value == EMPTY or row[INDEX_ITEM_NO].value == EMPTY \
+                or row[INDEX_CATEGORY].value == EMPTY \
                 or row[INDEX_LAST_NAME].value == EMPTY or row[INDEX_FIRST_NAME].value == EMPTY \
                 or row[INDEX_LAST_NAME].value == EMPTY or row[INDEX_POST_CODE].value == EMPTY \
                 or row[INDEX_STATE].value == EMPTY or row[INDEX_CITY].value == EMPTY \
