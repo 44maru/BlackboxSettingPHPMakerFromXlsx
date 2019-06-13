@@ -69,7 +69,6 @@ CONFIG_KEY_START_WEEK = "START_WEEK"
 CONFIG_KEY_START_HHMM = "START_HHMM"
 CONFIG_KEY_SECRET = "SECRET_KEY"
 CONFIG_KEY_DISCORD_HOOK_URL = "webhookURL"
-CONFIG_KEY_DISCORD_MESSAGE = "discordmessage"
 
 OUT_FILE_CONTENTS_HEADER = """<?php
 // 
@@ -294,7 +293,7 @@ class JsonMakerScreen(Screen):
                 delay = self.get_val_if_empty_as_default(row, INDEX_DELAY, CONFIG_DICT[CONFIG_KEY_DELAY])
                 start_hhmm = self.get_val_if_empty_as_default(row, INDEX_START_TIME, CONFIG_DICT[CONFIG_KEY_START_HHMM])
                 cache = self.get_val_if_empty_as_default(row, INDEX_CACHE, "true")
-                discord_messg = self.get_val_if_empty_as_default(row, INDEX_OTAKEBI, CONFIG_DICT[CONFIG_KEY_DISCORD_MESSAGE])
+                discord_messg = row[INDEX_OTAKEBI].value
                 proxy = row[INDEX_PROXY].value
 
                 f.write(OUT_FILE_CONTENTS_TEMPLATE.format(

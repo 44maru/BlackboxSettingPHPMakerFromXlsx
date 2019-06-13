@@ -3,4 +3,3 @@ START_WEEK=6
 START_HHMM=10:59:40
 SECRET_KEY=12345ABCDEFG
 webhookURL=http://hogehoge.co.jp
-discordmessage=サンプルメッセージ
