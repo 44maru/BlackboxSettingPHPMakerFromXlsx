@@ -267,6 +267,9 @@ class JsonMakerScreen(Screen):
                     item_size_3 = EMPTY
 
                 category = row[INDEX_CATEGORY].value
+                if category.lower() == "all":
+                    category = EMPTY
+
                 last_name = row[INDEX_LAST_NAME].value
                 first_name = row[INDEX_FIRST_NAME].value
                 email = row[INDEX_EMAIL].value
