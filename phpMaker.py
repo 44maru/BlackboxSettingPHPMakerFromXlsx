@@ -1,3 +1,11 @@
+from xlrd import XL_CELL_TEXT
+from xlrd import open_workbook
+from kivy.uix.screenmanager import Screen
+from kivy.resources import resource_add_path
+from kivy.core.window import Window
+from kivy.core.text import LabelBase, DEFAULT_FONT
+from kivy.config import Config
+from kivy.app import App
 import logging.config
 import datetime
 import sys
@@ -7,8 +15,6 @@ import jctconv
 LOG_CONF = "./logging.conf"
 logging.config.fileConfig(LOG_CONF)
 
-from kivy.app import App
-from kivy.config import Config
 
 Config.set('modules', 'inspector', '')  # Inspectorを有効にする
 Config.set('graphics', 'width', 480)
@@ -16,13 +22,7 @@ Config.set('graphics', 'height', 280)
 Config.set('graphics', 'maxfps', 20)  # フレームレートを最大で20にする
 Config.set('graphics', 'resizable', 0)  # Windowの大きさを変えられなくする
 Config.set('input', 'mouse', 'mouse,disable_multitouch')
-from kivy.core.text import LabelBase, DEFAULT_FONT
-from kivy.core.window import Window
-from kivy.resources import resource_add_path
-from kivy.uix.screenmanager import Screen
 
-from xlrd import open_workbook
-from xlrd import XL_CELL_TEXT
 
 if hasattr(sys, "_MEIPASS"):
     resource_add_path(sys._MEIPASS)
@@ -54,6 +54,8 @@ INDEX_START_TIME = 18
 INDEX_CACHE = 19
 INDEX_OTAKEBI = 20
 INDEX_PROXY = 21
+INDEX_RECAPTCHA_BYPASS = 22
+INDEX_2CAPTCHA_API = 23
 
 ID_MESSAGE = "message"
 
@@ -116,6 +118,9 @@ $setting["cash"]		= {};
 $setting["delay"]		= {};
 $setting["discordhookurl"] = "{}";
 $setting["discordmessage"] = "{}";
+$setting["recaptchabypass"]	= {};
+$setting["twocaptchabypass"]	= {};
+$setting["apikey"]	= "{}";
 $settings[{}] = $setting;
 """
 
@@ -201,9 +206,10 @@ class JsonMakerScreen(Screen):
         try:
             self.dump_out_file_core(file_path)
         except Exception as e:
+            print(e)
             self.disp_messg_err("{}の出力に失敗しました。処理Excel行番号={}。".format(
                 OUT_FILE_NAME, self.proc_line_number))
-            log.exception("{}の出力に失敗しました。処理Excel行番号={}。%s".format(
+            log.error("{}の出力に失敗しました。処理Excel行番号={}。%s".format(
                 OUT_FILE_NAME, self.proc_line_number), e)
 
     @staticmethod
@@ -231,20 +237,23 @@ class JsonMakerScreen(Screen):
                 log.info("{}行目 => {}".format(i + 1, row))
 
                 if self.is_not_address_record(row):
-                    log.info("{}行目に必須項目未入力のセルがありました。この行の取り込みをスキップします".format(i + 1))
+                    log.info(
+                        "{}行目に必須項目未入力のセルがありました。この行の取り込みをスキップします".format(i + 1))
                     continue
 
                 item_no_list = self.split_list(row, INDEX_ITEM_NO)
                 size_list = self.split_list(row, INDEX_ITEM_SIZE)
 
                 if len(item_no_list) != len(size_list):
-                    self.disp_messg_err("{}行目のアイテム数とサイズの数が一致しません。\n出力を中断しました。".format(i + 1))
+                    self.disp_messg_err(
+                        "{}行目のアイテム数とサイズの数が一致しません。\n出力を中断しました。".format(i + 1))
                     log.error("{}行目のアイテム数とサイズの数が一致しません。アイテム:{} サイズ:{}".format(
                         i + 1, item_no_list, size_list))
                     return False
 
                 if len(item_no_list) > 3:
-                    self.disp_messg_err("{}行目のアイテム数とサイズの数が4つ以上指定されています。\n出力を中断しました。".format(i + 1))
+                    self.disp_messg_err(
+                        "{}行目のアイテム数とサイズの数が4つ以上指定されています。\n出力を中断しました。".format(i + 1))
                     log.error("{}行目のアイテム数とサイズの数が4つ以上指定されています。アイテム:{} サイズ:{}".format(
                         i + 1, item_no_list, size_list))
                     return False
@@ -277,8 +286,10 @@ class JsonMakerScreen(Screen):
                 state = row[INDEX_STATE].value
                 city = row[INDEX_CITY].value
                 detail_address = row[INDEX_ADDRESS].value
-                zip_code = self.get_val_according_to_cell_type(row, INDEX_POST_CODE)
-                card_type = row[INDEX_PAY_TYPE].value.lower().replace(" ", "_").replace("mastercard", "master")
+                zip_code = self.get_val_according_to_cell_type(
+                    row, INDEX_POST_CODE)
+                card_type = row[INDEX_PAY_TYPE].value.lower().replace(
+                    " ", "_").replace("mastercard", "master")
 
                 if card_type == "代金引換":
                     today = datetime.date.today()
@@ -290,14 +301,43 @@ class JsonMakerScreen(Screen):
                 else:
                     card_number = row[INDEX_CARD_NUMBER].value
                     card_limit_month = "%02d" % row[INDEX_CARD_LIMIT_MONTH].value
-                    card_limit_year = "20" + str(int(row[INDEX_CARD_LIMIT_YEAR].value))
-                    cvv = self.get_val_according_to_cell_type(row, INDEX_CARD_CVV)
+                    card_limit_year = "20" + \
+                        str(int(row[INDEX_CARD_LIMIT_YEAR].value))
+                    cvv = self.get_val_according_to_cell_type(
+                        row, INDEX_CARD_CVV)
 
-                delay = self.get_val_if_empty_as_default(row, INDEX_DELAY, CONFIG_DICT[CONFIG_KEY_DELAY])
-                start_hhmm = self.get_val_if_empty_as_default(row, INDEX_START_TIME, CONFIG_DICT[CONFIG_KEY_START_HHMM])
-                cache = self.get_val_if_empty_as_default(row, INDEX_CACHE, "true")
+                delay = self.get_val_if_empty_as_default(
+                    row, INDEX_DELAY, CONFIG_DICT[CONFIG_KEY_DELAY])
+                start_hhmm = self.get_val_if_empty_as_default(
+                    row, INDEX_START_TIME, CONFIG_DICT[CONFIG_KEY_START_HHMM])
+                cache = self.get_val_if_empty_as_default(
+                    row, INDEX_CACHE, "true")
                 discord_messg = row[INDEX_OTAKEBI].value
                 proxy = row[INDEX_PROXY].value
+
+                recaptchabypass = row[INDEX_RECAPTCHA_BYPASS].value
+                if recaptchabypass == EMPTY or recaptchabypass == "true":
+                    recaptchabypass = "true"
+                elif recaptchabypass == "false":
+                    pass
+                else:
+                    self.disp_messg_err(
+                        "{}行目のrecaptchaバイパスの値がtrue/false/空のいずれでもありません 。\n出力を中断しました。".format(i + 1))
+                    log.error("{}行目のrecaptchaバイパスの値がtrue/false/空のいずれでもありません。実際の値:{}".format(
+                        i + 1, recaptchabypass))
+                    return False
+
+                twocaptchabypass = row[INDEX_2CAPTCHA_API].value
+                if twocaptchabypass == "false":
+                    apiKey = ""
+                elif twocaptchabypass != EMPTY:
+                    apiKey = twocaptchabypass
+                    twocaptchabypass = "true"
+                else:
+                    self.disp_messg_err(
+                        "{}行目の2captchAPIの値が未入力です 。\n出力を中断しました。".format(i + 1))
+                    log.error("{}行目の2captchaAPIの値が未入力です。".format(i + 1))
+                    return False
 
                 f.write(OUT_FILE_CONTENTS_TEMPLATE.format(
                     CONFIG_DICT[CONFIG_KEY_SECRET], category,
@@ -307,6 +347,7 @@ class JsonMakerScreen(Screen):
                     phone_number, state, city, detail_address, zip_code, card_type, card_number,
                     card_limit_month, card_limit_year, cvv, cache, delay,
                     CONFIG_DICT[CONFIG_KEY_DISCORD_HOOK_URL], discord_messg,
+                    recaptchabypass, twocaptchabypass, apiKey,
                     index
                 ))
 
@@ -407,7 +448,8 @@ def load_config():
 
 if __name__ == '__main__':
     try:
-        log = logging.getLogger('my-log')
+        log = logging.getLogger(__name__)
+        log.info("KKK")
         setup_config()
         LabelBase.register(DEFAULT_FONT, "ipaexg.ttf")
         PhpMakerApp().run()

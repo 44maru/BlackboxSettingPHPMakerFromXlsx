@@ -1,0 +1,18 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+kivy = "*"
+pypiwin32 = "*"
+kivy-deps-sdl2 = "*"
+kivy-deps-glew = "*"
+xlrd = "*"
+jctconv = "*"
+pyinstaller = "==3.4"
+
+[requires]
+python_version = "3.6"

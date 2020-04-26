@@ -1,11 +1,12 @@
 /dist
+/.venv
 /phpMaker.spec
 /.idea
 /__pycache__
 /build
 /blackbox-setting.php
 /debug.log
-/ipaexg.ttf
 /venv
+/testdata
 .vscode/settings.json
 debug.log*
