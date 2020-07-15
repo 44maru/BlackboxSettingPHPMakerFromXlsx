@@ -6,9 +6,12 @@ from kivy.core.window import Window
 from kivy.core.text import LabelBase, DEFAULT_FONT
 from kivy.config import Config
 from kivy.app import App
+import sys
 import logging.config
 import datetime
-import sys
+import time
+from datetime import datetime as dt
+
 
 import jctconv
 
@@ -56,6 +59,7 @@ INDEX_OTAKEBI = 20
 INDEX_PROXY = 21
 INDEX_RECAPTCHA_BYPASS = 22
 INDEX_2CAPTCHA_API = 23
+INDEX_RESTOCK = 24
 
 ID_MESSAGE = "message"
 
@@ -121,6 +125,9 @@ $setting["discordmessage"] = "{}";
 $setting["recaptchabypass"]	= {};
 $setting["twocaptchabypass"]	= {};
 $setting["apikey"]	= "{}";
+$setting["restock_use"]	= {};
+$setting["restock_start_week"]	= {};
+$setting["restock_start_hhmm"]	= "{}";
 $settings[{}] = $setting;
 """
 
@@ -339,6 +346,14 @@ class JsonMakerScreen(Screen):
                     log.error("{}行目の2captchaAPIの値が未入力です。".format(i + 1))
                     return False
 
+                restock = row[INDEX_RESTOCK].value
+                try:
+                    dt.strptime(restock, '%H:%M:%S')
+                    restock_use = "true"
+                except Exception as e:
+                    restock = ""
+                    restock_use = "false"
+
                 f.write(OUT_FILE_CONTENTS_TEMPLATE.format(
                     CONFIG_DICT[CONFIG_KEY_SECRET], category,
                     item_code_1, item_size_1, item_code_2, item_size_2, item_code_3, item_size_3,
@@ -348,6 +363,7 @@ class JsonMakerScreen(Screen):
                     card_limit_month, card_limit_year, cvv, cache, delay,
                     CONFIG_DICT[CONFIG_KEY_DISCORD_HOOK_URL], discord_messg,
                     recaptchabypass, twocaptchabypass, apiKey,
+                    restock_use, CONFIG_DICT[CONFIG_KEY_START_WEEK], restock,
                     index
                 ))
 
@@ -449,7 +465,6 @@ def load_config():
 if __name__ == '__main__':
     try:
         log = logging.getLogger(__name__)
-        log.info("KKK")
         setup_config()
         LabelBase.register(DEFAULT_FONT, "ipaexg.ttf")
         PhpMakerApp().run()
