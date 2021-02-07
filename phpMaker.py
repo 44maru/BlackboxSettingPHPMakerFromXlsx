@@ -130,6 +130,7 @@ $setting["apikey"]	= "{}";
 $setting["googleaccount"]    = "{}";
 $setting["googlepassword"]    = "{}";
 $setting["googlemailaddress"]    = "{}";
+$setting["googleLogin"]    = "{}";
 $settings[{}] = $setting;
 """
 
@@ -352,6 +353,11 @@ class JsonMakerScreen(Screen):
                 googlePasswd = row[INDEX_GOOGLE_PASSWORD].value
                 googleAccountResetMail = row[INDEX_GOOGLE_ACCOUNT_RESET_MAIL].value
 
+                if googleAccount is None or googleAccount == EMPTY:
+                    needGoogleLogin = "false"
+                else:
+                    needGoogleLogin = "true"
+
                 f.write(OUT_FILE_CONTENTS_TEMPLATE.format(
                     CONFIG_DICT[CONFIG_KEY_SECRET], category,
                     item_code_1, item_size_1, item_code_2, item_size_2, item_code_3, item_size_3,
@@ -361,7 +367,7 @@ class JsonMakerScreen(Screen):
                     card_limit_month, card_limit_year, cvv, cache, delay,
                     CONFIG_DICT[CONFIG_KEY_DISCORD_HOOK_URL], discord_messg,
                     recaptchabypass, twocaptchabypass, apiKey,
-                    googleAccount, googlePasswd, googleAccountResetMail,
+                    googleAccount, googlePasswd, googleAccountResetMail, needGoogleLogin,
                     index
                 ))
 
