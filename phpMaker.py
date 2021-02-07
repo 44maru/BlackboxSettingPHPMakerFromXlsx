@@ -59,7 +59,9 @@ INDEX_OTAKEBI = 20
 INDEX_PROXY = 21
 INDEX_RECAPTCHA_BYPASS = 22
 INDEX_2CAPTCHA_API = 23
-INDEX_RESTOCK = 24
+INDEX_GOOGLE_ACCOUNT = 24
+INDEX_GOOGLE_PASSWORD = 25
+INDEX_GOOGLE_ACCOUNT_RESET_MAIL = 26
 
 ID_MESSAGE = "message"
 
@@ -125,9 +127,9 @@ $setting["discordmessage"] = "{}";
 $setting["recaptchabypass"]	= {};
 $setting["twocaptchabypass"]	= {};
 $setting["apikey"]	= "{}";
-$setting["restock_use"]	= {};
-$setting["restock_start_week"]	= {};
-$setting["restock_start_hhmm"]	= "{}";
+$setting["googleaccount"]    = "{}";
+$setting["googlepassword"]    = "{}";
+$setting["googlemailaddress"]    = "{}";
 $settings[{}] = $setting;
 """
 
@@ -346,13 +348,9 @@ class JsonMakerScreen(Screen):
                     log.error("{}行目の2captchaAPIの値が未入力です。".format(i + 1))
                     return False
 
-                restock = row[INDEX_RESTOCK].value
-                try:
-                    dt.strptime(restock, '%H:%M:%S')
-                    restock_use = "true"
-                except Exception as e:
-                    restock = ""
-                    restock_use = "false"
+                googleAccount = row[INDEX_GOOGLE_ACCOUNT].value
+                googlePasswd = row[INDEX_GOOGLE_PASSWORD].value
+                googleAccountResetMail = row[INDEX_GOOGLE_ACCOUNT_RESET_MAIL].value
 
                 f.write(OUT_FILE_CONTENTS_TEMPLATE.format(
                     CONFIG_DICT[CONFIG_KEY_SECRET], category,
@@ -363,7 +361,7 @@ class JsonMakerScreen(Screen):
                     card_limit_month, card_limit_year, cvv, cache, delay,
                     CONFIG_DICT[CONFIG_KEY_DISCORD_HOOK_URL], discord_messg,
                     recaptchabypass, twocaptchabypass, apiKey,
-                    restock_use, CONFIG_DICT[CONFIG_KEY_START_WEEK], restock,
+                    googleAccount, googlePasswd, googleAccountResetMail,
                     index
                 ))
 
