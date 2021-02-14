@@ -130,7 +130,7 @@ $setting["apikey"]	= "{}";
 $setting["googleaccount"]    = "{}";
 $setting["googlepassword"]    = "{}";
 $setting["googlemailaddress"]    = "{}";
-$setting["googleLogin"]    = "{}";
+$setting["googleLogin"]    = {};
 $settings[{}] = $setting;
 """
 
